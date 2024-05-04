@@ -1,4 +1,4 @@
-import { Box, Stack, Typography } from "@mui/material";
+import { Box, Button, Link, Stack, Typography } from "@mui/material";
 import { JobDetails } from "../../../types";
 import { useMemo } from "react";
 
@@ -33,31 +33,127 @@ const JobItem = ({ jobDetails }: JobItemsProps) => {
   }, [minJdSalary, maxJdSalary, salaryCurrencyCode]);
 
   return (
-    <Stack sx={{ p: 2, borderRadius: 2, border: "1px solid lightgray" }}>
+    <Stack
+      component={Link}
+      href={jdLink}
+      target="_blank"
+      sx={{
+        p: 2,
+        gap: 1,
+        borderRadius: 2,
+        position: "relative",
+        color: "inherit",
+        textDecoration: "none",
+        border: "1px solid lightgray",
+        "&:hover": {
+          boxShadow: "0px 0px 10px 0px rgba(0,0,0,0.1)",
+        },
+      }}
+    >
       <Stack
+        component="section"
         direction="row"
         sx={{
-          alignItems: "center",
+          alignItems: "flex-start",
           justifyContent: "start",
-          gap: 1,
+          gap: 1.5,
         }}
       >
         <Box
           component="img"
           sx={{ width: 32, height: 32, borderRadius: "50%" }}
-          alt=""
+          alt="company logo"
           src={logoUrl}
         />
-        <Stack>
-          <Box component="p">{companyName}</Box>
-          <Box component="p">{jobRole}</Box>
-          <Box component="p">{location}</Box>
+        <Stack gap={0.2}>
+          <Typography
+            component="p"
+            variant="subtitle2"
+            sx={{
+              fontWeight: "bold",
+              fontSize: "0.8rem",
+              color: "gray",
+            }}
+          >
+            {companyName}
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              textTransform: "capitalize",
+            }}
+          >
+            {jobRole}
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              textTransform: "capitalize",
+              fontSize: "0.7rem",
+            }}
+          >
+            {location}
+          </Typography>
         </Stack>
       </Stack>
-      <Typography variant="body2">
-        Estimated Salary: {esimatedSalaryLabel}
+      <Typography
+        variant="body2"
+        sx={{
+          color: "gray",
+        }}
+      >
+        Estimated Salary: {esimatedSalaryLabel} ✅
       </Typography>
-      <Typography variant="body2">{jobDetailsFromCompany}</Typography>
+      <Typography
+        component="p"
+        variant="body2"
+        sx={{
+          height: 250,
+          overflow: "hidden",
+          maskImage:
+            "linear-gradient(rgb(255, 255, 255), rgb(255, 255, 255), rgba(255, 255, 255, 0));",
+        }}
+      >
+        {jobDetailsFromCompany}
+      </Typography>
+      <Stack
+        component="section"
+        sx={{
+          gap: 1.5,
+        }}
+      >
+        <Stack gap={0.5}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "darkgray",
+              fontWeight: "bold",
+            }}
+          >
+            Minimum Experience
+          </Typography>
+          <Typography variant="body2">{minExp} years</Typography>
+        </Stack>
+        <Button
+          variant="contained"
+          sx={{
+            backgroundColor: "#55EFC4",
+            color: "black",
+            textTransform: "none",
+          }}
+        >
+          ⚡ Easy Apply
+        </Button>
+        <Button
+          variant="contained"
+          sx={{
+            backgroundColor: "#6C48FF",
+            textTransform: "none",
+          }}
+        >
+          Unlock Referral asks
+        </Button>
+      </Stack>
     </Stack>
   );
 };
