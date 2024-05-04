@@ -1,8 +1,8 @@
-import { Box } from "@mui/material";
 import "./App.css";
+import JobListing from "./pages/jobListing";
 
 function App() {
-  return <Box></Box>;
+  return <JobListing />;
 }
 
 export default App;
