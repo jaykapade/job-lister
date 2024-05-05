@@ -105,36 +105,31 @@ const JobListing = () => {
       });
     }
     if (key === "remote" || filters["remote"]) {
-      const isRemote =
-        key === "remote" ? value === "remote" : filters["remote"] === "remote";
-      const isHybrid =
-        key === "remote" ? value === "hybrid" : filters["remote"] === "hybrid";
-      const isOnSite =
-        key === "remote"
-          ? value === "on-site"
-          : filters["remote"] === "on-site";
+      const valStr = key === "remote" ? value : filters["remote"];
+      const valArr = valStr?.split(",");
 
-      if (isRemote)
-        tempList = tempList.filter(
-          (job) => job?.location?.toLowerCase() === "remote"
-        );
-      else if (isHybrid)
-        tempList = tempList.filter(
-          (job) => job?.location?.toLowerCase() === "hybrid"
-        );
-      else if (isOnSite) {
-        tempList = tempList.filter(
-          (job) => !["remote", "hybrid"].includes(job?.location?.toLowerCase())
-        );
-      }
+      const isRemote = valArr.includes("remote");
+      const isHybrid = valArr.includes("hybrid");
+      const isOnSite = valArr.includes("on-site");
+
+      if ((isRemote || isHybrid) && !isOnSite)
+        tempList = tempList.filter((job) => {
+          return valArr?.includes(job?.location?.toLowerCase());
+        });
+
+      if (isOnSite && !isRemote && !isHybrid)
+        tempList = tempList.filter((job) => {
+          return !["remote", "hybrid"]?.includes(job?.location?.toLowerCase());
+        });
     }
     if (key === "techStack" || filters["techStack"]) {
       //TODO: After checking with API
     }
     if (key === "role" || filters["role"]) {
       tempList = tempList.filter((job) => {
-        const val = key === "role" ? value : filters["role"];
-        return job?.jobRole?.toLowerCase().includes(val?.toLowerCase());
+        const valStr = key === "role" ? value : filters["role"];
+        const valArr = valStr?.split(",");
+        return valArr?.includes(job?.jobRole?.toLowerCase());
       });
     }
     if (key === "minBaseSalary" || filters["minBaseSalary"]) {
@@ -144,9 +139,7 @@ const JobListing = () => {
           key === "minBaseSalary" ? value : filters["minBaseSalary"];
         return job?.minJdSalary >= parseInt(minSal);
       });
-      console.log("🚀 ~ temp", "minBaseSalary", tempList);
     }
-    console.log("🚀 ~ temp", "tempList", tempList);
     // setting filter values
     setFilters((prevFilters) => ({
       ...prevFilters,
@@ -233,12 +226,17 @@ const JobListing = () => {
     >
       <Stack direction="row" component="header" gap={2}>
         <Autocomplete
+          multiple
           sx={selectStyles}
           size="small"
           options={roleOptions}
-          value={roleOptions.find((option) => option.value === filters.role)}
+          value={roleOptions.filter((option) => {
+            const valArr = filters.role?.split(",");
+            return valArr?.includes(option.value);
+          })}
           onChange={(_event, newValue) => {
-            onFilterChange("role", newValue?.value || "");
+            const valStr = newValue.map((val) => val.value).join(",");
+            onFilterChange("role", valStr || "");
           }}
           renderInput={(params) => (
             <TextField
@@ -271,14 +269,17 @@ const JobListing = () => {
           )}
         />
         <Autocomplete
+          multiple
           sx={selectStyles}
           size="small"
           options={remoteOptions}
-          value={remoteOptions.find(
-            (option) => option.value === filters.remote
-          )}
+          value={remoteOptions.filter((option) => {
+            const valArr = filters.remote?.split(",");
+            return valArr?.includes(option.value);
+          })}
           onChange={(_event, newValue) => {
-            onFilterChange("remote", newValue?.value || "");
+            const valStr = newValue.map((val) => val.value).join(",");
+            onFilterChange("remote", valStr || "");
           }}
           renderInput={(params) => (
             <TextField
