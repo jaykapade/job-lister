@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Autocomplete, Box, Stack, TextField } from "@mui/material";
-import { JobDetails, JobListResponse } from "../../types";
+
 import JobItem from "./components/jobItem";
+import { JobDetails, JobListResponse } from "../../types";
+import EmptyPage from "../../components/EmptyPage";
 
 const roleOptions = [
   {
@@ -315,6 +317,13 @@ const JobListing = () => {
           onChange={(e) => onFilterChange("companyName", e.target.value)}
         />
       </Stack>
+      {filteredJobList.length === 0 && (
+        <EmptyPage
+          title="No Jobs Found"
+          subTitle="Try changing your filters"
+          sx={{ marginTop: 10, mx: "auto" }}
+        />
+      )}
       <Box
         sx={{
           display: "grid",
