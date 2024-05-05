@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Autocomplete, Box, Stack, TextField } from "@mui/material";
 
 import JobItem from "./components/jobItem";
-import { JobDetails, JobListResponse } from "../../types";
 import EmptyPage from "../../components/EmptyPage";
+import { JobDetails, JobListResponse } from "../../types";
 
 const roleOptions = [
   {
@@ -52,8 +52,9 @@ const minBaseSalaryOptions = Array.from({ length: 50 }, (_, index) => {
 const JobListing = () => {
   const hasMounted = useRef(false);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const [loading, setLoading] = useState(false);
   const [offset, setOffset] = useState(0);
+  const [totalRecords, setTotalRecords] = useState(10);
+  const [loading, setLoading] = useState(false);
   const [jobList, setJobList] = useState<JobDetails[]>([]);
   const [filteredJobList, setFilteredJobList] = useState<JobDetails[]>([]);
   const [filters, setFilters] = useState({
@@ -154,12 +155,14 @@ const JobListing = () => {
   };
 
   const fetchJobList = (offset: number) => {
+    if (loading || offset >= totalRecords) return;
+
     setLoading(true);
-    console.log("🚀 ~ fetchJobList", offset);
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
     const body = JSON.stringify({
-      limit: 20,
+      // Loading 30 initially and then 10 at a time
+      limit: hasMounted.current ? 10 : 30,
       offset,
     });
     const requestOptions = {
@@ -175,11 +178,10 @@ const JobListing = () => {
       .then((result) => {
         try {
           const res: JobListResponse = JSON.parse(result);
-
+          setTotalRecords(res.totalCount);
           setJobList((prev) =>
             getUniqueListBy([...prev, ...res.jdList], "jdUid")
           );
-
           const list = handleListFiltering(
             "",
             "",
@@ -200,9 +202,7 @@ const JobListing = () => {
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting) {
-        // TODO: uncomment below line when filters are done
         setOffset((prev) => prev + 10);
-        console.log("bottom reached");
       }
     });
     if (bottomRef.current) observer.observe(bottomRef.current);
@@ -213,8 +213,6 @@ const JobListing = () => {
   useEffect(() => {
     fetchJobList(offset);
   }, [offset]);
-
-  console.log(filteredJobList);
 
   return (
     <Stack
