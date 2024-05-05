@@ -24,9 +24,9 @@ const JobItem = ({ jobDetails }: JobItemsProps) => {
     if (minJdSalary && maxJdSalary) {
       return `${salaryCurrencyCode} ${minJdSalary} - ${maxJdSalary} LPA`;
     } else if (minJdSalary) {
-      return `Min.${salaryCurrencyCode} ${minJdSalary} LPA`;
+      return `${salaryCurrencyCode} ${minJdSalary} LPA (Min.)`;
     } else if (maxJdSalary) {
-      return `${salaryCurrencyCode} ${maxJdSalary} LPA`;
+      return `${salaryCurrencyCode} ${maxJdSalary} LPA (Max.)`;
     } else {
       return "Not Mentioned";
     }
@@ -63,7 +63,7 @@ const JobItem = ({ jobDetails }: JobItemsProps) => {
           component="img"
           sx={{ width: 32, height: 32, borderRadius: "50%" }}
           alt="company logo"
-          src={logoUrl}
+          src={logoUrl || "https://placehold.co/60"}
         />
         <Stack gap={0.2}>
           <Typography
@@ -100,6 +100,7 @@ const JobItem = ({ jobDetails }: JobItemsProps) => {
         variant="body2"
         sx={{
           color: "gray",
+          fontSize: "0.8rem",
         }}
       >
         Estimated Salary: {esimatedSalaryLabel} ✅
@@ -132,7 +133,9 @@ const JobItem = ({ jobDetails }: JobItemsProps) => {
           >
             Minimum Experience
           </Typography>
-          <Typography variant="body2">{minExp} years</Typography>
+          <Typography variant="body2">
+            {minExp ? `${minExp} Years` : "NA"}
+          </Typography>
         </Stack>
         <Button
           variant="contained"
