@@ -127,6 +127,16 @@ const JobItem = ({ jobDetails }: JobItemsProps) => {
           <Typography
             variant="body2"
             sx={{
+              color: "blue",
+              textAlign: "center",
+              mb: 3,
+            }}
+          >
+            View Job
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
               color: "darkgray",
               fontWeight: "bold",
             }}
@@ -143,6 +153,9 @@ const JobItem = ({ jobDetails }: JobItemsProps) => {
             backgroundColor: "#55EFC4",
             color: "black",
             textTransform: "none",
+            "&:hover": {
+              backgroundColor: "#33b490",
+            },
           }}
         >
           ⚡ Easy Apply
@@ -152,6 +165,9 @@ const JobItem = ({ jobDetails }: JobItemsProps) => {
           sx={{
             backgroundColor: "#6C48FF",
             textTransform: "none",
+            "&:hover": {
+              backgroundColor: "#4a2bff",
+            },
           }}
         >
           Unlock Referral asks

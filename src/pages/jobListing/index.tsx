@@ -3,6 +3,8 @@ import { Autocomplete, Box, Stack, TextField } from "@mui/material";
 
 import JobItem from "./components/jobItem";
 import EmptyPage from "../../components/EmptyPage";
+
+import ArrowDown from "../../assets/svgs/arrow_down.svg";
 import { JobDetails, JobListResponse } from "../../types";
 
 const roleOptions = [
@@ -40,7 +42,7 @@ const remoteOptions = [
 ];
 
 const experienceOptions = Array.from({ length: 10 }, (_, index) => ({
-  label: `${index + 1} years`,
+  label: `${index + 1} ${index + 1 === 1 ? "year" : "years"}`,
   value: `${index + 1}`,
 }));
 
@@ -67,7 +69,17 @@ const JobListing = () => {
     minBaseSalary: "",
   });
 
-  const selectStyles = { flex: 1 };
+  const selectProps: {
+    size: "small" | "medium";
+    sx: { flex: number };
+    popupIcon: JSX.Element;
+  } = {
+    size: "small",
+    sx: { flex: 1 },
+    popupIcon: (
+      <Box component="img" src={ArrowDown} alt="arrow" sx={{ width: 24 }} />
+    ),
+  };
 
   const onFilterChange = (key: string, value: string) => {
     const list = handleListFiltering(key, value, jobList);
@@ -222,16 +234,22 @@ const JobListing = () => {
         gap: 2,
       }}
     >
-      <Stack direction="row" component="header" gap={2}>
+      <Stack
+        direction="row"
+        component="header"
+        sx={{
+          gap: 2,
+          flexWrap: "wrap",
+        }}
+      >
         <Autocomplete
           multiple
-          sx={selectStyles}
-          size="small"
           options={roleOptions}
           value={roleOptions.filter((option) => {
             const valArr = filters.role?.split(",");
             return valArr?.includes(option.value);
           })}
+          {...selectProps}
           onChange={(_event, newValue) => {
             const valStr = newValue.map((val) => val.value).join(",");
             onFilterChange("role", valStr || "");
@@ -247,8 +265,7 @@ const JobListing = () => {
           )}
         />
         <Autocomplete
-          sx={selectStyles}
-          size="small"
+          {...selectProps}
           options={experienceOptions}
           value={experienceOptions.find(
             (option) => option.value === filters.minExperience
@@ -268,8 +285,7 @@ const JobListing = () => {
         />
         <Autocomplete
           multiple
-          sx={selectStyles}
-          size="small"
+          {...selectProps}
           options={remoteOptions}
           value={remoteOptions.filter((option) => {
             const valArr = filters.remote?.split(",");
@@ -290,8 +306,7 @@ const JobListing = () => {
           )}
         />
         <Autocomplete
-          sx={selectStyles}
-          size="small"
+          {...selectProps}
           options={minBaseSalaryOptions}
           value={minBaseSalaryOptions.find(
             (option) => option.value === filters.minBaseSalary
