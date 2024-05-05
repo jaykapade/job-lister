@@ -1,7 +1,51 @@
 import { useEffect, useRef, useState } from "react";
-import { Box, Input, MenuItem, Select, Stack } from "@mui/material";
+import { Autocomplete, Box, Stack, TextField } from "@mui/material";
 import { JobDetails, JobListResponse } from "../../types";
 import JobItem from "./components/jobItem";
+
+const roleOptions = [
+  {
+    label: "Frontend",
+    value: "frontend",
+  },
+  {
+    label: "Backend",
+    value: "backend",
+  },
+  {
+    label: "IOS",
+    value: "ios",
+  },
+  {
+    label: "Android",
+    value: "android",
+  },
+];
+
+const remoteOptions = [
+  {
+    label: "Remote",
+    value: "remote",
+  },
+  {
+    label: "Hybrid",
+    value: "hybrid",
+  },
+  {
+    label: "On-site",
+    value: "on-site",
+  },
+];
+
+const experienceOptions = Array.from({ length: 10 }, (_, index) => ({
+  label: `${index + 1} years`,
+  value: `${index + 1}`,
+}));
+
+const minBaseSalaryOptions = Array.from({ length: 50 }, (_, index) => {
+  const value = (index * 5 + 5).toString();
+  return { label: `${value} LPA`, value };
+});
 
 const JobListing = () => {
   const hasMounted = useRef(false);
@@ -22,48 +66,82 @@ const JobListing = () => {
 
   const selectStyles = { flex: 1 };
 
-  const handleFilterChange = (key: string, value: string) => {
+  const onFilterChange = (key: string, value: string) => {
+    const list = handleListFiltering(key, value, jobList);
+    setFilteredJobList(list);
+  };
+
+  const handleListFiltering = (
+    key: string,
+    value: string,
+    jobList: JobDetails[]
+  ) => {
+    // Set the temp job list
     let tempList = [...jobList];
-    console.log("🚀 ~ temp before tempList:", tempList, key, value);
 
     if (key === "minExperience" || filters["minExperience"]) {
-      tempList = tempList.filter((job) => job?.minExp <= parseInt(value));
-      console.log("🚀 ~ temp", "minExperience", tempList);
+      tempList = tempList.filter((job) => {
+        const val =
+          key === "minExperience"
+            ? parseInt(value)
+            : parseInt(filters["minExperience"]);
+        return job?.minExp >= (val || 0);
+      });
     }
     if (key === "companyName" || filters["companyName"]) {
-      tempList = tempList.filter((job) =>
-        job?.companyName?.toLowerCase().includes(value?.toLowerCase())
-      );
-      console.log("🚀 ~ temp", "companyName", tempList);
+      tempList = tempList.filter((job) => {
+        const companyName = job?.companyName?.toLowerCase();
+        const val =
+          key === "companyName" ? value?.toLowerCase() : filters["companyName"];
+        return companyName.includes(val);
+      });
     }
     if (key === "location" || filters["location"]) {
-      tempList = tempList.filter((job) => job?.location === value);
-      console.log("🚀 ~ temp", "location", tempList);
+      tempList = tempList.filter((job) => {
+        const val = key === "location" ? value : filters["location"];
+        return job?.location === val;
+      });
     }
     if (key === "remote" || filters["remote"]) {
-      if (value === "remote")
+      const isRemote =
+        key === "remote" ? value === "remote" : filters["remote"] === "remote";
+      const isHybrid =
+        key === "remote" ? value === "hybrid" : filters["remote"] === "hybrid";
+      const isOnSite =
+        key === "remote"
+          ? value === "on-site"
+          : filters["remote"] === "on-site";
+
+      if (isRemote)
         tempList = tempList.filter(
           (job) => job?.location?.toLowerCase() === "remote"
         );
-      else
+      else if (isHybrid)
         tempList = tempList.filter(
-          (job) => job?.location?.toLowerCase() !== "remote"
+          (job) => job?.location?.toLowerCase() === "hybrid"
         );
-      console.log("🚀 ~ temp", "remote", tempList);
+      else if (isOnSite) {
+        tempList = tempList.filter(
+          (job) => !["remote", "hybrid"].includes(job?.location?.toLowerCase())
+        );
+      }
     }
     if (key === "techStack" || filters["techStack"]) {
       //TODO: After checking with API
     }
     if (key === "role" || filters["role"]) {
-      tempList = tempList.filter((job) =>
-        job?.jobRole.toLowerCase().includes(value.toLowerCase())
-      );
-      console.log("🚀 ~ temp", "role", filters["role"], tempList);
+      tempList = tempList.filter((job) => {
+        const val = key === "role" ? value : filters["role"];
+        return job?.jobRole?.toLowerCase().includes(val?.toLowerCase());
+      });
     }
     if (key === "minBaseSalary" || filters["minBaseSalary"]) {
-      tempList = tempList.filter((job) =>
-        job?.minJdSalary ? job?.minJdSalary <= parseInt(value) : true
-      );
+      tempList = tempList.filter((job) => {
+        if (!job?.minJdSalary) return false;
+        const minSal =
+          key === "minBaseSalary" ? value : filters["minBaseSalary"];
+        return job?.minJdSalary >= parseInt(minSal);
+      });
       console.log("🚀 ~ temp", "minBaseSalary", tempList);
     }
     console.log("🚀 ~ temp", "tempList", tempList);
@@ -72,9 +150,10 @@ const JobListing = () => {
       ...prevFilters,
       [key]: value,
     }));
-    // setting filtered list
-    setFilteredJobList(tempList);
+    // return filtered list
+    return tempList;
   };
+
   const getUniqueListBy = (arr: JobDetails[], key: keyof JobDetails) => {
     return [...new Map(arr.map((item) => [item[key], item])).values()];
   };
@@ -85,7 +164,7 @@ const JobListing = () => {
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
     const body = JSON.stringify({
-      limit: 10,
+      limit: 20,
       offset,
     });
     const requestOptions = {
@@ -101,12 +180,17 @@ const JobListing = () => {
       .then((result) => {
         try {
           const res: JobListResponse = JSON.parse(result);
+
           setJobList((prev) =>
             getUniqueListBy([...prev, ...res.jdList], "jdUid")
           );
-          setFilteredJobList((prev) =>
-            getUniqueListBy([...prev, ...res.jdList], "jdUid")
+
+          const list = handleListFiltering(
+            "",
+            "",
+            getUniqueListBy([...filteredJobList, ...res.jdList], "jdUid")
           );
+          setFilteredJobList(list);
         } catch (error) {
           console.error(error);
         }
@@ -120,7 +204,8 @@ const JobListing = () => {
 
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && hasMounted.current) {
+      if (entries[0].isIntersecting) {
+        // TODO: uncomment below line when filters are done
         setOffset((prev) => prev + 10);
         console.log("bottom reached");
       }
@@ -145,47 +230,89 @@ const JobListing = () => {
       }}
     >
       <Stack direction="row" component="header" gap={2}>
-        <Select
-          value={filters.role}
-          placeholder="Role"
-          onChange={(e) => handleFilterChange("role", e.target.value)}
-          size="small"
-          sx={selectStyles}
-        >
-          <MenuItem value="frontend">Frontend</MenuItem>
-          <MenuItem value="backend">Backend</MenuItem>
-          <MenuItem value="fullstack">Fullstack</MenuItem>
-          <MenuItem value="android">Android</MenuItem>
-        </Select>
-        <Select
-          placeholder="Experience"
+        <Autocomplete
           sx={selectStyles}
           size="small"
-          value={filters.minExperience}
-          onChange={(e) => handleFilterChange("minExperience", e.target.value)}
-        >
-          <MenuItem value="1">1</MenuItem>
-          <MenuItem value="2">2</MenuItem>
-          <MenuItem value="3">3</MenuItem>
-          <MenuItem value="4">4</MenuItem>
-          <MenuItem value="5">5</MenuItem>
-        </Select>
-        <Select
-          placeholder="Remote"
+          options={roleOptions}
+          value={roleOptions.find((option) => option.value === filters.role)}
+          onChange={(_event, newValue) => {
+            onFilterChange("role", newValue?.value || "");
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              InputProps={{
+                ...params.InputProps,
+                placeholder: "Role",
+              }}
+            />
+          )}
+        />
+        <Autocomplete
           sx={selectStyles}
           size="small"
-          value={filters.remote}
-          onChange={(e) => handleFilterChange("remote", e.target.value)}
-        >
-          <MenuItem value="remote">Remote</MenuItem>
-          <MenuItem value="onsite">Onsite</MenuItem>
-        </Select>
-        <Select placeholder="Minimum Base Salary" sx={selectStyles}></Select>
-        <Input
+          options={experienceOptions}
+          value={experienceOptions.find(
+            (option) => option.value === filters.minExperience
+          )}
+          onChange={(_event, newValue) => {
+            onFilterChange("minExperience", newValue?.value || "");
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              InputProps={{
+                ...params.InputProps,
+                placeholder: "Experience",
+              }}
+            />
+          )}
+        />
+        <Autocomplete
+          sx={selectStyles}
+          size="small"
+          options={remoteOptions}
+          value={remoteOptions.find(
+            (option) => option.value === filters.remote
+          )}
+          onChange={(_event, newValue) => {
+            onFilterChange("remote", newValue?.value || "");
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              InputProps={{
+                ...params.InputProps,
+                placeholder: "Remote",
+              }}
+            />
+          )}
+        />
+        <Autocomplete
+          sx={selectStyles}
+          size="small"
+          options={minBaseSalaryOptions}
+          value={minBaseSalaryOptions.find(
+            (option) => option.value === filters.minBaseSalary
+          )}
+          onChange={(_event, newValue) => {
+            onFilterChange("minBaseSalary", newValue?.value || "");
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              InputProps={{
+                ...params.InputProps,
+                placeholder: "Minimum Base Pay Salary",
+              }}
+            />
+          )}
+        />
+        <TextField
           placeholder="Search Company Name"
           size="small"
           value={filters.companyName}
-          onChange={(e) => handleFilterChange("companyName", e.target.value)}
+          onChange={(e) => onFilterChange("companyName", e.target.value)}
         />
       </Stack>
       <Box
@@ -206,7 +333,7 @@ const JobListing = () => {
           <JobItem jobDetails={job} key={job.jdUid} />
         ))}
         {loading && <p className="text-center">loading...</p>}
-        <Box ref={bottomRef} sx={{ margin: 4 }} />
+        <Box ref={bottomRef} sx={{ margin: 8 }} />
       </Box>
     </Stack>
   );
